@@ -18,7 +18,9 @@ It works loosely following the following steps:
 
 * Run the script from the repos root directory.
 * Uses ruby 2.2.1
-* `ruby migrate.rb --sd dataspace.demo.socrata.com --st <APP_TOKEN> --td opendata-demo.test-socrata.com --tt <APP_TOKEN> --sf <SODA_FOUNTAIN_IP> -r 50000 -d <DATASET_ID>`
+```
+ruby migrate.rb --sd dataspace.demo.socrata.com --st <APP_TOKEN> --td opendata-demo.test-socrata.com --tt <APP_TOKEN> --sf <SODA_FOUNTAIN_IP> -r 50000 -d <DATASET_ID>
+```
 
 ```
 Usage: ruby migrate.rb [options]
