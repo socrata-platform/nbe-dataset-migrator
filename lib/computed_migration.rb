@@ -33,7 +33,6 @@ class ComputedMigration
     @sf_metadata['columns'].each do |k,v|
       columns[v['id']] = k
     end
-    puts "column_map: #{columns}"
     columns
   end
 
@@ -47,11 +46,7 @@ class ComputedMigration
       'computation_strategy' => 'computationStrategy'
     }
 
-    puts source_column
-
     source_column.each do |k,v|
-      puts 'inside source column'
-      puts "#{k} => #{v}"
       next if delete.include?(k)
 
       new_key = modify[k] || k
@@ -65,7 +60,6 @@ class ComputedMigration
     new_column['computationStrategy']['source_columns'] = [ map_column_id(source_col_id) ]
     source_region_id = new_column['computationStrategy']['parameters']['region'].sub('_', '')
     new_column['computationStrategy']['parameters']['region'] = "_#{map_region_id(source_region_id)}"
-    puts "new Column: #{new_column}"
 
     new_column
   end
