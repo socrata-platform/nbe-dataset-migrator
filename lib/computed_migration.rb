@@ -4,6 +4,10 @@ require_relative 'datasync'
 
 class ComputedMigration
 
+  # The ComputedMigration class helps with migrating computed columns from one environment to another
+  # Currently, it uses the Soda Fountain api (require VPN!) to get metadata about the computed columns
+  # TODO: fix this to use the public api: /dataset_metadata/four_by_four.json once changes are pushed to prod
+
   def initialize(soda_fountain_ip, dataset_id)
     uri = URI.join("http://#{soda_fountain_ip}:6010", "dataset/_#{dataset_id}")
     response = HTTParty.get(uri)
@@ -55,7 +59,8 @@ class ComputedMigration
     end
 
     strategy_type = new_column['computationStrategy'].delete('strategy_type')
-    new_column['computationStrategy']['type'] = strategy_type
+    fail('strategy type not georegion, not sure what to do!') unless strategy_type == 'georegion'
+    new_column['computationStrategy']['type'] = 'georegion_match_on_point'
     source_col_id = new_column['computationStrategy']['source_columns'].first
     new_column['computationStrategy']['source_columns'] = [ map_column_id(source_col_id) ]
     source_region_id = new_column['computationStrategy']['parameters']['region'].sub('_', '')

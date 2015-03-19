@@ -26,7 +26,9 @@ module Datasync
     end
 
     def run_datasync(options, id)
-      datasync_jar = 'DataSync-1.5.4-nbe-capable.jar'
+      datasync_jar = 'resources/DataSync-1.5.4-nbe-capable.jar'
+
+      fail('Cannot find DataSync jar!') unless File.exist?(datasync_jar)
 
       cmd = "java -jar #{datasync_jar}"
       cmd += ' -t PortJob'
