@@ -61,7 +61,7 @@ class ComputedMigration
     end
 
     strategy_type = new_column['computationStrategy'].delete('strategy_type')
-    fail('strategy type not georegion, not sure what to do!') unless strategy_type == 'georegion'
+    fail('strategy type not georegion_match_on_point, not sure what to do!') unless strategy_type == 'georegion_match_on_point'
     new_column['computationStrategy']['type'] = 'georegion_match_on_point'
     source_col_id = new_column['computationStrategy']['source_columns'].first
     new_column['computationStrategy']['source_columns'] = [ map_column_id(source_col_id) ]
