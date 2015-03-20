@@ -1,6 +1,7 @@
 require_relative 'lib/client'
 require_relative 'lib/computed_migration'
 require 'optparse'
+require 'pry'
 
 options = {}
 OptionParser.new do |opts|
@@ -75,21 +76,24 @@ computed, standard = source_dataset['columns'].partition do |col|
   col['fieldName'].start_with?(':')
 end
 
-puts 'Creating standard columns:'
+puts "Creating #{standard.count} standard columns:"
 standard.each do |col|
   puts "Create column #{col['name']}"
   response = target_client.add_column(dataset['id'], col)
 end
 
-puts 'Migrating curated regions:'
-comp_cols = ComputedMigration.new(options[:sf_ip], options[:source_dataset])
-comp_cols.migrate_regions(options)
+computed_migration = ComputedMigration.new(options[:sf_ip], options[:source_dataset])
+puts "Migrating #{computed_migration.referenced_datasets.count} curated regions:"
+computed_migration.migrate_regions(options)
 
-puts 'Creating computed columns:'
-comp_cols.computed_columns.each do |k, v|
-  puts "Creating computed column #{k}"
-  transformed = comp_cols.transform_column(v)
-  response = target_client.add_column(dataset['id'], transformed)
+puts "Creating #{computed_migration.computed_columns.count} computed columns:"
+computed_migration.transformed_columns.each do |col|
+  if computed.select{ |e| e['fieldName'] == col['fieldName'] }.empty?
+    puts "Skipping column #{col} because it isn't in the list of columns from /api/view"
+    next
+  end
+  puts "Create computed column #{col['name']}"
+  target_client.add_column(dataset['id'], col)
 end
 
 puts "Migrate data from #{options[:source_domain]}, id: #{options[:source_dataset]}"

@@ -22,6 +22,13 @@ class ComputedMigration
     end
   end
 
+  # map of field name to new column information
+  def transformed_columns
+    @transformed_columns ||= computed_columns.map do |k, v|
+      transformed = transform_column(v)
+    end
+  end
+
   # Given a four by four, decide the column name
   def map_column_id(column_id)
     @column_ids_to_name ||= build_column_map
@@ -68,7 +75,7 @@ class ComputedMigration
   def referenced_datasets
     @referenced_datasets ||= computed_columns.map do |k,v|
       v['computation_strategy']['parameters']['region'].sub('_','')
-    end
+    end.uniq
   end
 
   def map_region_id(id)
