@@ -104,8 +104,8 @@ chunk_size = 10000
 total = 0
 loop do
   rows = source_client.get_data(options[:source_dataset], '$limit' => chunk_size, '$offset' => total)
-  target_client.ingress_data(dataset['id'], rows)
-  total += chunk_size
+  response = target_client.ingress_data(dataset['id'], rows)
+  total += response['Rows Created']
   puts "Migrated #{total} rows to new dataset."
   break unless rows.count == chunk_size
   break if row_limit and total >= row_limit
