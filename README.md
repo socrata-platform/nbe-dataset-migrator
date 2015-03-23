@@ -5,12 +5,12 @@ Migrates NBE datasets between environments
 ### Overview
 
 This is a gem to help with NBE->NBE dataset migrations.
-It works by providing a DatasetMigration class that exposes discrete actions, and has the capability of doing:
+It works by providing a DatasetMigration class that exposes the various steps required to migrate a dataset, including:
 * Fetch dataset metadata from the source environment
 * Create dataset with the same name in the target environment
-* Create the standard columns in the new dataset
+* Create standard columns in the new dataset
 * Find any computed columns in source dataset, and the curated regions they reference
-* Migrate over the curated regions to target environment (using DataSync)
+* Migrate over the curated regions to target environment (using DataSync with NBE support)
 * Create the computed columns in the new dataset, referencing the new curated regions
 * Copy over data using the SODA2 REST API
 * Publish
@@ -23,10 +23,16 @@ It works by providing a DatasetMigration class that exposes discrete actions, an
 * Get DataSync jar with ability to port into NBE, [here](https://drive.google.com/a/socrata.com/file/d/0Bz5SGM6croe5Tnc0ZnkzWkVTVDg/view?usp=sharing).
 * Run using the following command:
 
+```bash
+dataset_migrator -d [DATASET_ID] \
+  --sd https://dataspace.demo.socrata.com \
+  --st [SOURCE_APP_TOKEN] \
+  --td https://opendata-demo.test-socrata.com \
+  --tt [TARGET_APP_TOKEN] --sf [SODA_FOUNTAIN_IP] \
+  --rows 20000 \
+  --dj DataSync-1.5.4-nbe-capable.jar
 ```
-dataset_migrator -d [DATASET_ID] --sd https://dataspace.demo.socrata.com --st [SOURCE_APP_TOKEN] --td https://opendata-demo.test-socrata.com --tt [TARGET_APP_TOKEN] --sf [SODA_FOUNTAIN_IP] --rows 20000 --dj DataSync-1.5.4-nbe-capable.jar
-```
-
+Usage instructions:
 ```
 Usage: dataset_migrator [options]
     -d, --dataset [DATASET_ID]       Dataset to migrate to target environment.
@@ -40,18 +46,30 @@ Usage: dataset_migrator [options]
     -h, --help                       Displays help
 ```
 
-### Options
+### Using the gem
 
-Create the DatasetMigrator using an options hash, with the following keys:
+Create the DatasetMigrator by passing in an options hash, with the following keys:
 
 ```ruby
-options[:source_domain]
-options[:source_token]
-options[:target_domain]
-options[:target_token]
-options[:soda_fountain_ip] # ip address of source environment Soda Fountain server
-options[:source_id] # four by four of dataset to copy on source domain
-options[:datasync_jar] # relative path to datasync jar
+require 'nbe-dataset-migrator'
+
+options = {
+  user: ENV['SOCRATA_USER'],
+  password: ENV['SOCRATA_PASSWORD'],
+  source_domain: 'https://dataspace.demo.socrata.com',
+  source_token: '[APP_TOKEN]',
+  target_domain: 'https://opendata-demo.test-socrata.com',
+  target_token: '[APP_TOKEN]',
+  soda_fountain_ip: '[SODA_FOUNTAIN_IP]',
+  source_id: '[FOUR-BY-FOUR]',
+  datasync_jar: '[path/to/DataSync-1.5.4-nbe-capable.jar]'
+}
 
 migrator = NBE::DatasetMigrator.new(options)
+migrator.create_dataset_on_target
+migrator.create_standard_columns
+migrator.create_computed_columns
+migrator.migrate_data(20000)
+migrator.publish
+puts "Created new dataset: #{migrator.target_id}"
 ```
