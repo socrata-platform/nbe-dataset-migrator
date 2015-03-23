@@ -9,6 +9,8 @@ module NBE
         @source = source_client
         @target = target_client
         @datasync_jar = path_to_jar
+        fail("Cannot find DataSync jar (#{@datasync_jar})!") unless File.exist?(@datasync_jar)
+        fail("Cannot place config file, tmp folder doesn't exist!") unless Dir.exist?('tmp')
         generate_config_file
       end
 
@@ -37,8 +39,6 @@ module NBE
 
       def run_datasync(id)
 
-        fail('Cannot find DataSync jar!') unless File.exist?(@datasync_jar)
-
         cmd = "java -jar #{@datasync_jar}"
         cmd += ' -t PortJob'
         cmd += " -c tmp/config.json"
@@ -57,7 +57,7 @@ module NBE
         fail("Datasync failed!\n#{stdout}\n#{stderr}") unless status
 
         stdout_parsed = /Your newly created dataset is at:\n#{@target.domain}\/d\/(....-....)/.match(stdout)
-        new_id = stdout_parsed
+        new_id = stdout_parsed[1]
 
         puts "Newly created dataset is #{new_id}"
         new_id

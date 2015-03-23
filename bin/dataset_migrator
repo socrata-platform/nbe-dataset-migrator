@@ -5,7 +5,7 @@ require 'optparse'
 
 options = {}
 OptionParser.new do |opts|
-  opts.banner = 'Usage: ruby migrate.rb [options]'
+  opts.banner = 'Usage: dataset_migrator [options]'
 
   opts.on('-d', '--dataset [DATASET_ID]', 'Dataset to migrate to target environment.') do |id|
     options[:source_id] = id
@@ -49,22 +49,9 @@ OptionParser.new do |opts|
 end.parse!
 
 options[:user] = ENV['SOCRATA_USER']
-fail('No username found in $SOCRATA_USER') if options[:username].nil?
+fail('No username found in $SOCRATA_USER') if options[:user].nil?
 options[:password] = ENV['SOCRATA_PASSWORD']
 fail('No password found in $SOCRATA_PASSWORD') if options[:password].nil?
-
-
-# options = {
-#   user: ENV['SOCRATA_USER'],
-#   password: ENV['SOCRATA_PASSWORD'],
-#   source_domain: 'https://dataspace.demo.socrata.com',
-#   source_token: 'KpoBvruJj9xiIaepXdOgReWCl',
-#   target_domain: 'https://opendata-demo.test-socrata.com',
-#   target_token: 'o05aNTU5gxD16SqAbcSFK7PQ1',
-#   soda_fountain_ip: '10.1.0.69',
-#   source_id: '52my-2pak',
-#   datasync_jar: 'DataSync-1.5.4-nbe-capable.jar'
-# }
 
 m = NBE::DatasetMigrator.new(options)
 m.create_dataset_on_target
@@ -72,3 +59,5 @@ m.create_standard_columns
 m.create_computed_columns
 m.migrate_data(options[:row_limit])
 m.publish
+
+puts "#{options[:target_domain]}/d/#{m.target_id}"

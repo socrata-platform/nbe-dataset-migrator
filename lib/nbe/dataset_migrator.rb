@@ -50,17 +50,19 @@ module NBE
     end
 
     DEFAULT_CHUNK_SIZE = 10000
-    def migrate_data(row_limit)
+    # migrates over up to row_limit rows
+    # TODO: this is a fuzzy limit, guaranteed to be correct within 10000 rows
+    def migrate_data(row_limit = nil)
       puts "Migrating up to #{row_limit} rows into new dataset."
       offset = 0
-      limit = [row_limit, DEFAULT_CHUNK_SIZE].min
+      limit = DEFAULT_CHUNK_SIZE
       loop do
         rows = @source_client.get_data(@source_id, '$limit' => limit, '$offset' => offset)
         response = @target_client.ingress_data(@target_id, rows)
         offset += response['Rows Created']
         puts "Migrated #{offset} rows to new dataset."
         break if rows.count != limit # all rows have been migrated
-        break if offset >= row_limit # row limit has been reached
+        break if row_limit && offset >= row_limit # row limit has been reached
       end
     end
 
