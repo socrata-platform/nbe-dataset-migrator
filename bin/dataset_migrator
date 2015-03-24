@@ -59,5 +59,3 @@ fail('No password found in $SOCRATA_PASSWORD') if options[:password].nil?
 
 m = NBE::DatasetMigrator.new(options)
 m.run
-
-puts "#{options[:target_domain]}/d/#{m.target_id}"
