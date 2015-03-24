@@ -41,7 +41,8 @@ Usage: dataset_migrator [options]
         --td [DOMAIN]                Target domain
         --tt [TOKEN]                 Target app token
         --sf [SODA_FOUNTAIN_IP]      IP Address for Soda Fountain (requires VPN)
-    -r, --rows [ROW_LIMIT]           Total number of rows to copy over
+    -r, --rows [ROW_LIMIT]           Total number of rows to copy over, if blank, copies top 500,000
+        --[no-]publish               Publish dataset after end of migration, default is to publish
         --dj [PATH_TO_JAR]           Path to NBE-capable Datasync jar
     -h, --help                       Displays help
 ```
@@ -62,14 +63,11 @@ options = {
   target_token: '[APP_TOKEN]',
   soda_fountain_ip: '[SODA_FOUNTAIN_IP]',
   source_id: '[FOUR-BY-FOUR]',
+  publish: true,
+  row_limit: 100_000
   datasync_jar: '[path/to/DataSync-1.5.4-nbe-capable.jar]'
 }
 
 migrator = NBE::DatasetMigrator.new(options)
-migrator.create_dataset_on_target
-migrator.create_standard_columns
-migrator.create_computed_columns
-migrator.migrate_data(20_000)
-migrator.publish
-puts "Created new dataset: #{migrator.target_id}"
+migrator.run
 ```
