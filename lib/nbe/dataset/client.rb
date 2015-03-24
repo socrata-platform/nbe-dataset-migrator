@@ -4,13 +4,9 @@ require 'httparty'
 module NBE
   module Dataset
     class Client
-      #TODO: should we add nbe=true query param to all requests?
-
       include HTTParty
-
       default_timeout(200) # set timeout to 200 sec
-
-      # debug_output $stdout
+      # debug_output($stdout) # uncomment for debug HTTParty output
 
       attr_accessor :domain, :app_token, :user, :password
 
