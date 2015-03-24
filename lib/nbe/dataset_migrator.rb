@@ -16,7 +16,23 @@ module NBE
       @source_id = options[:source_id]
       @soda_fountain_ip = options[:soda_fountain_ip]
       @datasync_jar = options[:datasync_jar]
+      @row_limit = options[:row_limit] || 500_000
+      @publish_dataset = options[:publish].nil? ? options[:publish] : true
     end
+
+    # options[:row_limit], default: copy everything
+    # options[:publish], default: true
+    def run
+      create_dataset_on_target
+      create_standard_columns
+      create_computed_columns
+      migrate_data
+      publish if @publish_dataset
+
+      puts "#{@target_client.domain}/d/#{target_id}"
+    end
+
+    private
 
     def create_dataset_on_target
       puts "Creating dataset: #{dataset_metadata['name']}"
@@ -36,8 +52,9 @@ module NBE
       end
     end
 
-    def create_computed_columns(migrate_regions = true)
+    def create_computed_columns
       computed_migration = Dataset::ComputedMigration.new(@soda_fountain_ip, @source_id)
+      migrate_regions = @source_client.domain != @target_client.domain
       if migrate_regions
         puts "Migrating #{computed_migration.referenced_datasets.count} curated regions:"
         computed_migration.migrate_regions(datasync)
@@ -49,20 +66,20 @@ module NBE
       end
     end
 
-    DEFAULT_CHUNK_SIZE = 10000
+    DEFAULT_CHUNK_SIZE = 50_000
     # migrates over up to row_limit rows
     # TODO: this is a fuzzy limit, guaranteed to be correct within 10000 rows
-    def migrate_data(row_limit = nil)
-      puts "Migrating up to #{row_limit} rows into new dataset."
+    def migrate_data
+      puts "Migrating up to #{@row_limit} rows into new dataset."
       offset = 0
-      limit = DEFAULT_CHUNK_SIZE
       loop do
+        limit = [ DEFAULT_CHUNK_SIZE, @row_limit - offset ].min
         rows = @source_client.get_data(@source_id, '$limit' => limit, '$offset' => offset)
         response = @target_client.ingress_data(@target_id, rows)
         offset += response['Rows Created']
         puts "Migrated #{offset} rows to new dataset."
         break if rows.count != limit # all rows have been migrated
-        break if row_limit && offset >= row_limit # row limit has been reached
+        break if offset >= @row_limit # row limit has been reached
       end
     end
 
@@ -71,15 +88,13 @@ module NBE
       @target_client.publish_dataset(@target_id)
     end
 
-    private
-
     def dataset_metadata
       @metadata ||= @source_client.get_dataset_metadata(@source_id)
     end
 
     def standard_columns
-      @standard ||= dataset_metadata['columns'].select do |col|
-        not col['fieldName'].start_with?(':')
+      @standard ||= dataset_metadata['columns'].reject do |col|
+        col['fieldName'].start_with?(':')
       end
     end
 

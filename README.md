@@ -24,7 +24,7 @@ It works by providing a DatasetMigration class that exposes the various steps re
 * Run using the following command:
 
 ```bash
-dataset_migrator -d [DATASET_ID] \
+$ dataset_migrator -d [DATASET_ID] \
   --sd https://dataspace.demo.socrata.com \
   --st [SOURCE_APP_TOKEN] \
   --td https://opendata-demo.test-socrata.com \
@@ -69,7 +69,7 @@ migrator = NBE::DatasetMigrator.new(options)
 migrator.create_dataset_on_target
 migrator.create_standard_columns
 migrator.create_computed_columns
-migrator.migrate_data(20000)
+migrator.migrate_data(20_000)
 migrator.publish
 puts "Created new dataset: #{migrator.target_id}"
 ```

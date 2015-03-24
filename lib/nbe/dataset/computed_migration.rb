@@ -20,15 +20,15 @@ module NBE
       end
 
       def computed_columns
-        @computed_columns ||= @sf_metadata['columns'].select do |k,v|
-          k.start_with?(':@')
+        @computed_columns ||= @sf_metadata['columns'].select do |key, _|
+          key.start_with?(':@')
         end
       end
 
       # columns to be created (transformed to be compatible with the public api)
       def transformed_columns
-        @transformed_columns ||= computed_columns.map do |k, v|
-          transformed = transform_column(v)
+        @transformed_columns ||= computed_columns.map do |_, value|
+          transformed = transform_column(value)
         end
       end
 
@@ -40,8 +40,8 @@ module NBE
 
       def build_column_map
         columns = {}
-        @sf_metadata['columns'].each do |k,v|
-          columns[v['id']] = k
+        @sf_metadata['columns'].each do |key, value|
+          columns[value['id']] = key
         end
         columns
       end
@@ -49,18 +49,18 @@ module NBE
       def transform_column(source_column)
         new_column = {}
 
-        delete = ['id']
-        modify = {
+        to_delete = ['id']
+        to_modify = {
           'field_name' => 'fieldName',
           'datatype' => 'dataTypeName',
           'computation_strategy' => 'computationStrategy'
         }
 
-        source_column.each do |k,v|
-          next if delete.include?(k)
+        source_column.each do |key, value|
+          next if to_delete.include?(key)
 
-          new_key = modify[k] || k
-          new_column[new_key] = v
+          new_key = to_modify[key] || key
+          new_column[new_key] = value
         end
 
         strategy_type = new_column['computationStrategy'].delete('strategy_type')
@@ -76,17 +76,18 @@ module NBE
 
       # return an array of the curated regions that need to be migrated over
       def referenced_datasets
-        @referenced_datasets ||= computed_columns.map do |k,v|
-          v['computation_strategy']['parameters']['region'].sub('_','')
+        @referenced_datasets ||= computed_columns.map do |_, value|
+          value['computation_strategy']['parameters']['region'].sub('_','')
         end.uniq
       end
 
       def map_region_id(id)
-        @region_mapping ? @region_mapping[id] : id
+        id = @region_mapping ? @region_mapping[id] : id
+        fail("#{id} not found in region_mapping!") unless id
+        id
       end
 
       def migrate_regions(datasync)
-
         @region_mapping = {}
         referenced_datasets.each do |id|
           @region_mapping[id] = datasync.run_datasync(id)
