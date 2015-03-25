@@ -1,5 +1,6 @@
 require 'addressable/uri'
 require 'httparty'
+require 'json'
 
 module NBE
   module Dataset
@@ -31,6 +32,11 @@ module NBE
 
       def base_options
         @request_options
+      end
+
+      def get_migration(id)
+        path = "api/migrations/#{id}"
+        perform_get(path)
       end
 
       def get_data(id, query = {})
@@ -74,14 +80,16 @@ module NBE
 
       def perform_post(path, options = {})
         uri = URI.join(domain, path)
-        response = self.class.post(uri, base_options.merge(options).merge(query: {nbe: true}))
-        handle_error(path, response) unless response.code == 200
+        options = base_options.merge(options.merge(query: {nbe: true}))
+        response = self.class.post(uri, options)
+        handle_error(path, response, options) unless response.code == 200
         JSON.parse(response.body)
       end
 
-      def handle_error(path, response)
+      def handle_error(path, response, request_options = nil)
         warn "Error accessing #{URI.join(domain, path)}"
         warn response
+        warn request_options if request_options
         fail("Response code: #{response.code}")
       end
     end

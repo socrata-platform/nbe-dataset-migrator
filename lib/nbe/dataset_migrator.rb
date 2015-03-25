@@ -23,6 +23,8 @@ module NBE
     # options[:row_limit], default: copy everything
     # options[:publish], default: true
     def run
+      check_for_nbe_or_fail
+
       create_dataset_on_target
       create_standard_columns
       create_computed_columns
@@ -33,6 +35,16 @@ module NBE
     end
 
     private
+
+    def check_for_nbe_or_fail
+      puts "Verifying that dataset #{source_id} is an NBE dataset."
+      unless dataset_metadata['newBackend']
+        nbe_id = @source_client.get_migration(source_id)['nbeId']
+        warn("Dataset #{source_id} is on the old backend. Use DataSync for OBE migrations")
+        warn("To copy this dataset using this gem, use the migrated id: #{nbe_id}")
+        fail('This gem cannot copy OBE datasets!')
+      end
+    end
 
     def create_dataset_on_target
       puts "Creating dataset: #{dataset_metadata['name']}"
