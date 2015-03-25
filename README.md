@@ -20,6 +20,7 @@ It works by providing a DatasetMigration class that exposes the various steps re
 * Install the gem globally
 * Uses ruby 2.2.1
 * Looks for Socrata username & password from environment variables: `$SOCRATA_USER` & `$SOCRATA_PASSWORD`
+* Note: you should make sure this is a super-admin account, and it should be shared across environments
 * Get DataSync jar with ability to port into NBE, [here](https://drive.google.com/a/socrata.com/file/d/0Bz5SGM6croe5Tnc0ZnkzWkVTVDg/view?usp=sharing).
 * Run using the following command:
 

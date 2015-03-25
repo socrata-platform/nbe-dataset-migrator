@@ -4,7 +4,6 @@ require 'nbe/dataset/datasync'
 
 module NBE
   module Dataset
-
     class ComputedMigration
 
       # The ComputedMigration class helps with migrating computed columns from one environment to another
