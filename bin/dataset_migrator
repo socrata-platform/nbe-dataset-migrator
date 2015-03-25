@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby
+
+require 'nbe/dataset_migrator'
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = 'Usage: dataset_migrator [options]'
+
+  opts.on('-d', '--dataset [DATASET_ID]', 'Dataset to migrate to target environment.') do |id|
+    options[:source_id] = id
+  end
+
+  opts.on('--sd [DOMAIN]', 'Source domain') do |domain|
+    domain = "https://#{domain}" unless domain.start_with?('http')
+    options[:source_domain] = domain
+  end
+
+  opts.on('--st [TOKEN]', 'Source app token') do |token|
+    options[:source_token] = token
+  end
+
+  opts.on('--td [DOMAIN]', 'Target domain') do |domain|
+    domain = "https://#{domain}" unless domain.start_with?('http')
+    options[:target_domain] = domain
+  end
+
+  opts.on('--tt [TOKEN]', 'Target app token') do |token|
+    options[:target_token] = token
+  end
+
+  opts.on('--sf [SODA_FOUNTAIN_IP]', 'IP Address for Soda Fountain (requires VPN)') do |ip|
+    options[:soda_fountain_ip] = ip
+  end
+
+  opts.on('-r', '--rows [ROW_LIMIT]', 'Total number of rows to copy over, if blank, copies top 500,000') do |rows|
+    options[:row_limit] = rows.to_i
+  end
+
+  opts.on('--[no-]publish', 'Publish dataset after end of migration, default is to publish') do |publish|
+    options[:publish] = publish
+  end
+
+  opts.on('--dj [PATH_TO_JAR]', 'Path to NBE-capable Datasync jar') do |path|
+    options[:datasync_jar] = path
+  end
+
+  opts.on('-h', '--help', 'Displays help') do
+    puts(opts)
+    exit
+  end
+
+end.parse!
+
+options[:user] = ENV['SOCRATA_USER']
+fail('No username found in $SOCRATA_USER') if options[:user].nil?
+options[:password] = ENV['SOCRATA_PASSWORD']
+fail('No password found in $SOCRATA_PASSWORD') if options[:password].nil?
+
+m = NBE::DatasetMigrator.new(options)
+m.run
