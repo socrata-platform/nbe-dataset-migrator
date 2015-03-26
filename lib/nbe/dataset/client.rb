@@ -27,8 +27,8 @@ module NBE
             username: @user,
             password: @password
           }
-          @request_options[:verify] = false if domain.include?('localhost')
         }
+        @request_options[:verify] = false if domain.include?('localhost')
       end
 
       def base_options
