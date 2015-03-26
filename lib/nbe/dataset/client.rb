@@ -73,7 +73,7 @@ module NBE
 
       def perform_get(path, options = {})
         uri = URI.join(domain, path)
-        response = self.class.get(uri, options)
+        response = self.class.get(uri, base_options.merge(options))
         handle_error(path, response) unless response.code == 200
         JSON.parse(response.body)
       end
