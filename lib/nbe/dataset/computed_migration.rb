@@ -34,20 +34,6 @@ module NBE
         end
       end
 
-      # Given a four by four, decide the column name
-      def map_column_id(column_id)
-        @column_ids_to_name ||= build_column_map
-        @column_ids_to_name[column_id]
-      end
-
-      def build_column_map
-        columns = {}
-        @sf_metadata['columns'].each do |key, value|
-          columns[value['id']] = key
-        end
-        columns
-      end
-
       def transform_column(source_column)
         new_column = {}
 
@@ -70,8 +56,6 @@ module NBE
           fail('strategy type not georegion_match_on_point, not sure what to do!')
         end
         new_column['computationStrategy']['type'] = 'georegion_match_on_point'
-        source_col_id = new_column['computationStrategy']['source_columns'].first
-        new_column['computationStrategy']['source_columns'] = [map_column_id(source_col_id)]
         source_region_id = new_column['computationStrategy']['parameters']['region'].sub('_', '')
         new_column['computationStrategy']['parameters']['region'] = "_#{map_region_id(source_region_id)}"
 

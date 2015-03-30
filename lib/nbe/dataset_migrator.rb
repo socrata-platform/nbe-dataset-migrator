@@ -12,14 +12,18 @@ module NBE
     attr_reader :source_id, :target_id
 
     def initialize(options)
-      @source_client = Dataset::Client.new(options[:source_domain],
-                                           options[:source_token],
-                                           options[:user],
-                                           options[:password])
-      @target_client = Dataset::Client.new(options[:target_domain],
-                                           options[:target_token],
-                                           options[:user],
-                                           options[:password])
+      @source_client = Dataset::Client.new(
+        options[:source_domain],
+        options[:source_token],
+        options[:user],
+        options[:password]
+      )
+      @target_client = Dataset::Client.new(
+        options[:target_domain],
+        options[:target_token],
+        options[:user],
+        options[:password]
+      )
       @source_id = options[:source_id]
       @soda_fountain_ip = options[:soda_fountain_ip]
       @datasync_jar = options[:datasync_jar]
@@ -76,6 +80,8 @@ module NBE
       if migrate_regions
         puts "Migrating #{computed_migration.referenced_datasets.count} curated regions:"
         computed_migration.migrate_regions(datasync)
+      else
+        puts 'Skipping region migration, dataset domains are the same.'
       end
       puts "Creating #{computed_migration.transformed_columns.count} computed columns"
       computed_migration.transformed_columns.each do |col|
@@ -86,7 +92,6 @@ module NBE
 
     DEFAULT_CHUNK_SIZE = 50_000
     # migrates over up to row_limit rows
-    # TODO: this is a fuzzy limit, guaranteed to be correct within 10000 rows
     def migrate_data
       puts "Migrating up to #{@row_limit} rows into new dataset."
       offset = 0
@@ -117,7 +122,11 @@ module NBE
     end
 
     def datasync
-      @datasync ||= Dataset::Datasync.new(@source_client, @target_client, @datasync_jar)
+      @datasync ||= Dataset::Datasync.new(
+        @source_client,
+        @target_client,
+        @datasync_jar
+      )
     end
   end # DatasetMigrator
 end # NBE

@@ -4,6 +4,7 @@ require 'json'
 
 module NBE
   module Dataset
+
     class Client
       include HTTParty
       default_timeout(200) # set timeout to 200 sec
