@@ -41,7 +41,8 @@ OptionParser.new do |opts|
     options[:publish] = publish
   end
 
-  opts.on('--dj [PATH_TO_JAR]', 'Path to NBE-capable Datasync jar') do |path|
+  opts.on('--dj [PATH_TO_JAR]', 'Path to NBE-capable Datasync jar',
+          'If not present, will skip migrate regions/create computed columns') do |path|
     options[:datasync_jar] = path
   end
 
@@ -49,7 +50,6 @@ OptionParser.new do |opts|
     puts(opts)
     exit
   end
-
 end.parse!
 
 options[:user] = ENV['SOCRATA_USER']

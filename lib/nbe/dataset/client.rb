@@ -4,12 +4,14 @@ require 'json'
 
 module NBE
   module Dataset
+
     class Client
       include HTTParty
       default_timeout(200) # set timeout to 200 sec
       # debug_output($stdout) # uncomment for debug HTTParty output
 
       attr_accessor :domain, :app_token, :user, :password
+      attr_reader :base_options
 
       def initialize(domain, app_token, user, password)
         domain = "https://#{domain}" unless domain.start_with?('http')
@@ -18,7 +20,7 @@ module NBE
         @user = user
         @password = password
 
-        @request_options = {
+        @base_options = {
           headers: {
             'X-App-Token' => @app_token,
             'Content-Type' => 'application/json'
@@ -28,10 +30,7 @@ module NBE
             password: @password
           }
         }
-      end
-
-      def base_options
-        @request_options
+        @base_options[:verify] = false if domain.include?('localhost')
       end
 
       def get_migration(id)
@@ -54,7 +53,7 @@ module NBE
         perform_get(path)
       end
 
-      def create_dataset(id, nbe = true)
+      def create_dataset(id)
         path = 'api/views'
         perform_post(path, body: id.to_json)
       end
@@ -80,16 +79,16 @@ module NBE
 
       def perform_post(path, options = {})
         uri = URI.join(domain, path)
-        options = base_options.merge(options.merge(query: {nbe: true}))
+        options = base_options.merge(options.merge(query: { nbe: true }))
         response = self.class.post(uri, options)
         handle_error(path, response, options) unless response.code == 200
         JSON.parse(response.body)
       end
 
-      def handle_error(path, response, request_options = nil)
+      def handle_error(path, response, options = nil)
         warn "Error accessing #{URI.join(domain, path)}"
         warn response
-        warn request_options if request_options
+        warn options if options
         fail("Response code: #{response.code}")
       end
     end

@@ -3,7 +3,6 @@ require 'open3'
 module NBE
   module Dataset
     class Datasync
-
       def initialize(source_client, target_client, path_to_jar)
         @source = source_client
         @target = target_client
@@ -13,24 +12,24 @@ module NBE
         generate_config_file
       end
 
-      def generate_config_file()
+      def generate_config_file
         config = {
-          'domain': @target.domain,
-          'username': @target.user,
-          'password': @target.password,
-          'appToken': @source.app_token,
-          'portDestinationDomainAppToken': @target.app_token,
-          'adminEmail': '',
-          'emailUponError': 'false',
-          'logDatasetID': '',
-          'outgoingMailServer': '',
-          'smtpPort': '',
-          'sslPort': '',
-          'smtpUsername': '',
-          'smtpPassword': '',
-          'filesizeChunkingCutoffMB': '10',
-          'numRowsPerChunk': '10000',
-          'useNewBackend': true
+          'domain' => @target.domain,
+          'username' => @target.user,
+          'password' => @target.password,
+          'appToken' => @source.app_token,
+          'portDestinationDomainAppToken' => @target.app_token,
+          'adminEmail' => '',
+          'emailUponError' => 'false',
+          'logDatasetID' => '',
+          'outgoingMailServer' => '',
+          'smtpPort' => '',
+          'sslPort' => '',
+          'smtpUsername' => '',
+          'smtpPassword' => '',
+          'filesizeChunkingCutoffMB' => '10',
+          'numRowsPerChunk' => '10000',
+          'useNewBackend' => true
         }.to_json
 
         File.write('tmp/config.json', config)
@@ -40,7 +39,7 @@ module NBE
         cmd = [
           "java -jar #{@datasync_jar}",
           '-t PortJob',
-          "-c tmp/config.json",
+          '-c tmp/config.json',
           '-pm copy_all',
           "-pd1 #{@source.domain}",
           "-pi1 #{id}",
@@ -62,7 +61,6 @@ module NBE
         puts "Newly created dataset is #{new_id}"
         new_id
       end
-
     end
   end
 end
