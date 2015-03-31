@@ -38,7 +38,7 @@ module NBE
 
       create_dataset_on_target
       create_standard_columns
-      create_computed_columns unless @datasync_jar.nil?
+#      create_computed_columns unless @datasync_jar.nil?
       migrate_data
       publish if @publish_dataset
 
@@ -90,7 +90,7 @@ module NBE
       end
     end
 
-    DEFAULT_CHUNK_SIZE = 50_000
+    DEFAULT_CHUNK_SIZE = 200_000
     # migrates over up to row_limit rows
     def migrate_data
       puts "Migrating up to #{@row_limit} rows into new dataset."

@@ -8,7 +8,7 @@ module NBE
     class Client
       include HTTParty
       default_timeout(200) # set timeout to 200 sec
-      # debug_output($stdout) # uncomment for debug HTTParty output
+#      debug_output($stdout) # uncomment for debug HTTParty output
 
       attr_accessor :domain, :app_token, :user, :password
       attr_reader :base_options
@@ -44,7 +44,7 @@ module NBE
       end
 
       def ingress_data(id, data)
-        path = "api/resource/#{id}"
+        path = "resource/#{id}"
         perform_post(path, body: data.to_json)
       end
 
