@@ -33,7 +33,7 @@ OptionParser.new do |opts|
     options[:soda_fountain_ip] = ip
   end
 
-  opts.on('-r', '--rows [ROW_LIMIT]', 'Total number of rows to copy over, if blank, copies top 500,000') do |rows|
+  opts.on('-r', '--rows [ROW_LIMIT]', 'Total number of rows to copy over, if blank, copies all') do |rows|
     options[:row_limit] = rows.to_i
   end
 
@@ -41,9 +41,8 @@ OptionParser.new do |opts|
     options[:publish] = publish
   end
 
-  opts.on('--dj [PATH_TO_JAR]', 'Path to NBE-capable Datasync jar',
-          'If not present, will skip migrate regions/create computed columns') do |path|
-    options[:datasync_jar] = path
+  opts.on('--ignore-computed-columns', 'Ignores migration of computed columns') do |path|
+    options[:ignored_computed_columns] = path
   end
 
   opts.on('-h', '--help', 'Displays help') do

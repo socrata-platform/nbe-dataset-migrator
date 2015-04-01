@@ -77,7 +77,7 @@ module NBE
 
     def create_standard_columns
       puts "Creating #{standard_columns.count} standard columns"
-      standard_columns.sort { |a, b| a['position'] <=> b['position'] }.each do |col|
+      standard_columns.each do |col|
         puts "Create column: #{col['name']}"
         @target_client.add_column(@target_id, col)
       end
