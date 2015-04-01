@@ -34,8 +34,8 @@ module NBE
       @region_map = {}
     end
 
-    # options[:row_limit], default: copy everything
-    # options[:publish], default: true
+    # runs the migrations
+    # returns the new dataset 4x4
     def run
       check_for_nbe_or_fail
 
@@ -53,6 +53,8 @@ module NBE
     end
 
     private
+
+    ## Migration Steps
 
     def check_for_nbe_or_fail
       puts "Verifying that dataset #{source_id} is an NBE dataset."
@@ -82,7 +84,7 @@ module NBE
     end
 
     def migrate_regions
-      puts "Migrating #{source_regions.count} to target domain"
+      puts "Migrating #{source_regions.count} regions to target domain"
       source_regions.each do |old_region|
         puts "Migrating region dataset #{old_region} to target domain."
         new_region = DatasetMigrator.new(
@@ -128,6 +130,8 @@ module NBE
       @target_client.publish_dataset(@target_id)
     end
 
+    ## Helper Methods
+
     def dataset_metadata
       @metadata ||= @source_client.get_dataset_metadata(@source_id)
     end
@@ -149,9 +153,7 @@ module NBE
     end
 
     def source_regions
-      v1_metadata['columns'].select do |key, _|
-        key.start_with?(':@')
-      end.map do |_, value|
+      v1_metadata['columns'].select { |key, _| key.start_with?(':@') }.map do |_, value|
         value['computationStrategy']['parameters']['region'].sub('_', '')
       end.uniq
     end
