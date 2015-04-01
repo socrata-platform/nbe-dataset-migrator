@@ -44,7 +44,7 @@ module NBE
       end
 
       def ingress_data(id, data)
-        path = "api/resource/#{id}"
+        path = "api/id/#{id}"
         perform_post(path, body: data.to_json)
       end
 
@@ -88,7 +88,7 @@ module NBE
       def handle_error(path, response, options = nil)
         warn "Error accessing #{URI.join(domain, path)}"
         warn response
-        warn options if options
+        warn options.delete('body') if options
         fail("Response code: #{response.code}")
       end
     end

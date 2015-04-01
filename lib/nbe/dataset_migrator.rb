@@ -28,7 +28,7 @@ module NBE
       @soda_fountain_ip = options[:soda_fountain_ip]
       @datasync_jar = options[:datasync_jar]
       @row_limit = options[:row_limit] || 500_000
-      @publish_dataset = options[:publish].nil? ? options[:publish] : true
+      @publish_dataset = options[:publish].nil? ? true : options[:publish]
     end
 
     # options[:row_limit], default: copy everything
@@ -68,7 +68,7 @@ module NBE
 
     def create_standard_columns
       puts "Creating #{standard_columns.count} standard columns"
-      standard_columns.each do |col|
+      standard_columns.sort { |a, b| a['position'] <=> b['position'] }.each do |col|
         puts "Create column: #{col['name']}"
         @target_client.add_column(@target_id, col)
       end
