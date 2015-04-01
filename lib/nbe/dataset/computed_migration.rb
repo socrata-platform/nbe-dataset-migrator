@@ -1,6 +1,5 @@
 require 'httparty'
 require 'securerandom'
-require 'nbe/dataset/datasync'
 
 module NBE
   module Dataset
@@ -12,11 +11,12 @@ module NBE
       # TODO: fix this to use the public api:
       # /dataset_metadata/four_by_four.json once changes are pushed to prod
 
-      def initialize(soda_fountain_ip, dataset_id)
+      def initialize(region_map, soda_fountain_ip, dataset_id)
         uri = URI.join("http://#{soda_fountain_ip}:6010",
                        "dataset/_#{dataset_id}")
         response = HTTParty.get(uri)
         fail("ERROR: #{response}") unless response.code == 200
+        @region_map = region_map
         @sf_metadata = JSON.parse(response.body)
         @dataset = dataset_id
       end
@@ -57,30 +57,9 @@ module NBE
         end
         new_column['computationStrategy']['type'] = 'georegion_match_on_point'
         source_region_id = new_column['computationStrategy']['parameters']['region'].sub('_', '')
-        new_column['computationStrategy']['parameters']['region'] = "_#{map_region_id(source_region_id)}"
+        new_column['computationStrategy']['parameters']['region'] = "_#{@region_map[source_region_id]}"
 
         new_column
-      end
-
-      # return an array of the curated regions that need to be migrated over
-      def referenced_datasets
-        @referenced_datasets ||= computed_columns.map do |_, value|
-          value['computation_strategy']['parameters']['region'].sub('_', '')
-        end.uniq
-      end
-
-      def map_region_id(id)
-        id = @region_mapping ? @region_mapping[id] : id
-        fail("#{id} not found in region_mapping!") unless id
-        id
-      end
-
-      def migrate_regions(datasync)
-        @region_mapping = {}
-        referenced_datasets.each do |id|
-          @region_mapping[id] = datasync.run_datasync(id)
-        end
-        @region_mapping
       end
     end
   end
