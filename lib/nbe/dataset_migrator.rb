@@ -1,6 +1,5 @@
 require 'nbe/dataset/client'
 require 'nbe/dataset/computed_migration'
-require 'nbe/dataset/datasync'
 
 module NBE
   class DatasetMigrator
@@ -9,16 +8,18 @@ module NBE
     # TODO: once computation strategy (including source column field name)
     # is available from a public api, move to a more sane method of creating columns
 
+    DEFAULT_CHUNK_SIZE = 50_000
+
     attr_reader :source_id, :target_id
 
     def initialize(options)
-      @source_client = Dataset::Client.new(
+      @source_client = options[:source_client] || Dataset::Client.new(
         options[:source_domain],
         options[:source_token],
         options[:user],
         options[:password]
       )
-      @target_client = Dataset::Client.new(
+      @target_client = options[:target_client] || Dataset::Client.new(
         options[:target_domain],
         options[:target_token],
         options[:user],
@@ -27,25 +28,33 @@ module NBE
       @source_id = options[:source_id]
       @soda_fountain_ip = options[:soda_fountain_ip]
       @datasync_jar = options[:datasync_jar]
-      @row_limit = options[:row_limit] || 500_000
-      @publish_dataset = options[:publish].nil? ? options[:publish] : true
+      @row_limit = options[:row_limit]
+      @publish_dataset = options[:publish].nil? ? true : options[:publish]
+      @ignore_computed_columns = options[:ignore_computed_columns]
+      @region_map = {}
     end
 
-    # options[:row_limit], default: copy everything
-    # options[:publish], default: true
+    # runs the migrations
+    # returns the new dataset 4x4
     def run
       check_for_nbe_or_fail
 
       create_dataset_on_target
       create_standard_columns
-      create_computed_columns unless @datasync_jar.nil?
+      unless @ignore_computed_columns
+        migrate_regions unless @source_client.domain == @target_client.domain
+        create_computed_columns
+      end
       migrate_data
       publish if @publish_dataset
 
       puts "#{@target_client.domain}/d/#{target_id}"
+      self
     end
 
     private
+
+    ## Migration Steps
 
     def check_for_nbe_or_fail
       puts "Verifying that dataset #{source_id} is an NBE dataset."
@@ -74,15 +83,24 @@ module NBE
       end
     end
 
-    def create_computed_columns
-      computed_migration = Dataset::ComputedMigration.new(@soda_fountain_ip, @source_id)
-      migrate_regions = @source_client.domain != @target_client.domain
-      if migrate_regions
-        puts "Migrating #{computed_migration.referenced_datasets.count} curated regions:"
-        computed_migration.migrate_regions(datasync)
-      else
-        puts 'Skipping region migration, dataset domains are the same.'
+    def migrate_regions
+      puts "Migrating #{source_regions.count} regions to target domain"
+      source_regions.each do |old_region|
+        puts "Migrating region dataset #{old_region} to target domain."
+        new_region = DatasetMigrator.new(
+          source_client: @source_client,
+          target_client: @target_client,
+          ignore_computed_columns: true,
+          source_id: old_region,
+          publish: true
+        ).run.target_id
+        @region_map[old_region] = new_region
+        puts "Finished migrating. #{old_region} => #{new_region}"
       end
+    end
+
+    def create_computed_columns
+      computed_migration = Dataset::ComputedMigration.new(@region_map, @soda_fountain_ip, @source_id)
       puts "Creating #{computed_migration.transformed_columns.count} computed columns"
       computed_migration.transformed_columns.each do |col|
         puts "Create computed column: #{col['name']}"
@@ -90,19 +108,20 @@ module NBE
       end
     end
 
-    DEFAULT_CHUNK_SIZE = 50_000
     # migrates over up to row_limit rows
     def migrate_data
-      puts "Migrating up to #{@row_limit} rows into new dataset."
+      puts "Migrating #{@row_limit.nil? ? 'all' : @row_limit} rows into new dataset."
       offset = 0
+      limit = DEFAULT_CHUNK_SIZE
       loop do
-        limit = [DEFAULT_CHUNK_SIZE, @row_limit - offset].min
+        limit = [DEFAULT_CHUNK_SIZE, @row_limit - offset].min unless @row_limit.nil?
+        break if limit == 0 # row_limit is zeror or all rows have been migrated
         rows = @source_client.get_data(@source_id, '$limit' => limit, '$offset' => offset)
         response = @target_client.ingress_data(@target_id, rows)
         offset += response['Rows Created']
         puts "Migrated #{offset} rows to new dataset."
         break if rows.count != limit # all rows have been migrated
-        break if offset >= @row_limit # row limit has been reached
+        break if @row_limit && offset >= @row_limit # row limit has been reached
       end
     end
 
@@ -111,8 +130,14 @@ module NBE
       @target_client.publish_dataset(@target_id)
     end
 
+    ## Helper Methods
+
     def dataset_metadata
       @metadata ||= @source_client.get_dataset_metadata(@source_id)
+    end
+
+    def v1_metadata
+      @v1_metadata ||= @source_client.get_v1_metadata(@source_id)
     end
 
     def standard_columns
@@ -121,12 +146,16 @@ module NBE
       end
     end
 
-    def datasync
-      @datasync ||= Dataset::Datasync.new(
-        @source_client,
-        @target_client,
-        @datasync_jar
-      )
+    def computed_columns
+      @computed ||= dataset_metadata['columns'].select do |col|
+        col['fieldName'].start_with?(':@')
+      end
+    end
+
+    def source_regions
+      v1_metadata['columns'].select { |key, _| key.start_with?(':@') }.map do |_, value|
+        value['computationStrategy']['parameters']['region'].sub('_', '')
+      end.uniq
     end
   end # DatasetMigrator
 end # NBE
