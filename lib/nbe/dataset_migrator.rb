@@ -8,18 +8,18 @@ module NBE
     # TODO: once computation strategy (including source column field name)
     # is available from a public api, move to a more sane method of creating columns
 
+    DEFAULT_CHUNK_SIZE = 50_000
+
     attr_reader :source_id, :target_id
 
     def initialize(options)
-      @source_client = options[:source_client]
-      @source_client ||= Dataset::Client.new(
+      @source_client = options[:source_client] || Dataset::Client.new(
         options[:source_domain],
         options[:source_token],
         options[:user],
         options[:password]
       )
-      @target_client = options[:target_client]
-      @target_client ||= Dataset::Client.new(
+      @target_client = options[:target_client] || Dataset::Client.new(
         options[:target_domain],
         options[:target_token],
         options[:user],
@@ -49,7 +49,7 @@ module NBE
       publish if @publish_dataset
 
       puts "#{@target_client.domain}/d/#{target_id}"
-      @target_id
+      self
     end
 
     private
@@ -93,7 +93,7 @@ module NBE
           ignore_computed_columns: true,
           source_id: old_region,
           publish: true
-        ).run
+        ).run.target_id
         @region_map[old_region] = new_region
         puts "Finished migrating. #{old_region} => #{new_region}"
       end
@@ -108,7 +108,6 @@ module NBE
       end
     end
 
-    DEFAULT_CHUNK_SIZE = 50_000
     # migrates over up to row_limit rows
     def migrate_data
       puts "Migrating #{@row_limit.nil? ? 'all' : @row_limit} rows into new dataset."
@@ -116,6 +115,7 @@ module NBE
       limit = DEFAULT_CHUNK_SIZE
       loop do
         limit = [DEFAULT_CHUNK_SIZE, @row_limit - offset].min unless @row_limit.nil?
+        break if limit == 0 # row_limit is zeror or all rows have been migrated
         rows = @source_client.get_data(@source_id, '$limit' => limit, '$offset' => offset)
         response = @target_client.ingress_data(@target_id, rows)
         offset += response['Rows Created']

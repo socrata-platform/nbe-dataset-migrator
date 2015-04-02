@@ -92,7 +92,7 @@ module NBE
       def handle_error(path, response, options = nil)
         warn "Error accessing #{URI.join(domain, path)}"
         warn response
-        warn options.delete('body') if options
+        warn options.delete('body').delete('basic_auth') if options
         fail("Response code: #{response.code}")
       end
     end
