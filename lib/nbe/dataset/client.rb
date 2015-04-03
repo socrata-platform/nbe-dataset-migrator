@@ -102,10 +102,27 @@ module NBE
         JSON.parse(response.body)
       end
 
+      # TODO: clean this up to implement better exponential backoff
       def perform_post(path, options = {})
         uri = URI.join(domain, path)
         options = base_options.merge(options.merge(query: { nbe: true }))
-        response = self.class.post(uri, options)
+        timeout = 5
+        response = nil
+        while timeout < 100 && (response.nil? || response.code != 200) # retry
+          timeout *= 2
+          begin
+            response = self.class.post(uri, options)
+            if response.code != 200
+              puts "Response failed with code #{response.code}, retrying in #{timeout} secs"
+              sleep timeout
+            end
+          rescue Net::ReadTimeout => e
+            warn "Exception thrown! Retrying in #{timeout} secs"
+            warn e.message
+            warn e.backtrace.join("\n")
+            sleep timeout
+          end
+        end
         handle_error(path, response, options) unless response.code == 200
         JSON.parse(response.body)
       end
