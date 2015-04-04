@@ -7,8 +7,8 @@ module NBE
   module Dataset
     class Client
       include HTTParty
-      default_timeout(60 * 5) # set timeout to 5 min
-      debug_output($stdout) # uncomment for debug HTTParty output
+      default_timeout(60 * 20) # set timeout to 10 min
+      # debug_output($stdout) # uncomment for debug HTTParty output
 
       attr_accessor :domain, :app_token, :user, :password
       attr_reader :base_options
@@ -58,7 +58,7 @@ module NBE
         perform_get(path, headers: { 'Cookie' => auth.cookie })
       end
 
-      def post_v1_metadata(id, metadata)
+      def update_v1_metadata(id, metadata)
         path = "metadata/v1/dataset/#{id}.json"
         perform_put(
           path,
@@ -106,23 +106,35 @@ module NBE
       def perform_post(path, options = {})
         uri = URI.join(domain, path)
         options = base_options.merge(options.merge(query: { nbe: true }))
-        timeout = 5
         response = nil
-        while timeout < 100 && (response.nil? || response.code != 200) # retry
-          timeout *= 2
-          begin
-            response = self.class.post(uri, options)
-            if response.code != 200
-              puts "Response failed with code #{response.code}, retrying in #{timeout} secs"
-              sleep timeout
-            end
-          rescue Net::ReadTimeout => e
-            warn "Exception thrown! Retrying in #{timeout} secs"
-            warn e.message
-            warn e.backtrace.join("\n")
-            sleep timeout
-          end
+        begin
+          response = self.class.post(uri, options)
+        rescue Net::ReadTimeout => ex
+          warn ex.message
+          warn ex.backtrace.join("\n")
         end
+        if response.nil? || response.code != 200 # retry
+          puts "Request failed to #{uri} with response #{response}, retrying in 30 secs"
+          sleep 30
+          response = self.class.post(uri, options)
+        end
+        # timeout = 5
+        # response = nil
+        # while timeout < 100 && (response.nil? || response.code != 200) # retry
+        #   timeout *= 2
+        #   begin
+        #     response = self.class.post(uri, options)
+        #     if response.code != 200
+        #       puts "Response failed with code #{response.code}, retrying in #{timeout} secs"
+        #       sleep timeout
+        #     end
+        #   rescue Net::ReadTimeout => e
+        #     warn "Exception thrown! Retrying in #{timeout} secs"
+        #     warn e.message
+        #     warn e.backtrace.join("\n")
+        #     sleep timeout
+        #   end
+        # end
         handle_error(path, response, options) unless response.code == 200
         JSON.parse(response.body)
       end
