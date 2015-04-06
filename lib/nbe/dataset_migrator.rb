@@ -45,10 +45,10 @@ module NBE
       unless @ignore_computed_columns
         migrate_regions unless @source_client.domain == @target_client.domain
         create_computed_columns
+        add_geometry_labels
       end
       migrate_data
       publish if @publish_dataset
-      add_geometry_labels unless @ignore_computed_columns
 
       puts "#{@target_client.domain}/d/#{target_id}"
       self
@@ -105,7 +105,7 @@ module NBE
     end
 
     def create_computed_columns
-      computed_migration = Dataset::ComputedMigration.new(@region_map, @soda_fountain_ip, @source_id)
+      computed_migration = Dataset::ComputedMigration.new(v1_metadata, @region_map)
       puts "Creating #{computed_migration.transformed_columns.count} computed columns"
       computed_migration.transformed_columns.each do |col|
         puts "Create computed column: #{col['name']}"
