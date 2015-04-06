@@ -17,6 +17,7 @@ It works by providing a DatasetMigration class that exposes the various steps re
 
 ### Updates
 * 4/1/15: No longer requires DataSync! (seriously, no April fools here)
+* 4/6/15: Uses Phidippides to get computation strategy, not soda fountain. No more VPN!
 
 ### Installation
 To use the gem in a local project, include the following in the project's Gemfile:
@@ -30,6 +31,8 @@ $ rake install
 ```
 After installing the gem you should be able to use the `dataset_migrator` utility from the command line.
 * The gem should support ruby versions 1.9.3 and up.
+* This requires another private gem: [core-auth-ruby](https://github.com/socrata/core-auth-ruby)
+  * It will probably be necessary to include it directly in your Gemfile, as well.
 
 ### Running the command line utility
 * Looks for Socrata username & password from environment variables: `$SOCRATA_USER` & `$SOCRATA_PASSWORD`
@@ -41,7 +44,7 @@ $ dataset_migrator -d [DATASET_ID] \
   --sd https://dataspace.demo.socrata.com \
   --st [SOURCE_APP_TOKEN] \
   --td https://opendata-demo.test-socrata.com \
-  --tt [TARGET_APP_TOKEN] --sf [SODA_FOUNTAIN_IP] \
+  --tt [TARGET_APP_TOKEN] \
   --rows 20000
 ```
 Usage instructions:
@@ -52,7 +55,6 @@ Usage: dataset_migrator [options]
         --st [TOKEN]                 Source app token
         --td [DOMAIN]                Target domain
         --tt [TOKEN]                 Target app token
-        --sf [SODA_FOUNTAIN_IP]      IP Address for Soda Fountain (requires VPN)
     -r, --rows [ROW_LIMIT]           Total number of rows to copy over, if blank, copies all
         --[no-]publish               Publish dataset after end of migration, default is to publish
         --ignore-computed-columns    Ignores migration of computed columns
@@ -73,7 +75,6 @@ options = {
   source_token: '[APP_TOKEN]',
   target_domain: 'https://opendata-demo.test-socrata.com',
   target_token: '[APP_TOKEN]',
-  soda_fountain_ip: '[SODA_FOUNTAIN_IP]', # IP address for source environment Soda Fountain
   source_id: '[FOUR-BY-FOUR]',
   publish: true, # optional
   row_limit: 100_000, # optional

@@ -29,10 +29,6 @@ OptionParser.new do |opts|
     options[:target_token] = token
   end
 
-  opts.on('--sf [SODA_FOUNTAIN_IP]', 'IP Address for Soda Fountain (requires VPN)') do |ip|
-    options[:soda_fountain_ip] = ip
-  end
-
   opts.on('-r', '--rows [ROW_LIMIT]', 'Total number of rows to copy over, if blank, copies all') do |rows|
     options[:row_limit] = rows.to_i
   end
