@@ -7,7 +7,7 @@ module NBE
   module Dataset
     class Client
       include HTTParty
-      default_timeout(60 * 20) # set timeout to 10 min
+      default_timeout(60 * 20) # set timeout to 20 min
       # debug_output($stdout) # uncomment for debug HTTParty output
 
       attr_accessor :domain, :app_token, :user, :password
@@ -19,7 +19,6 @@ module NBE
         @app_token = app_token
         @user = user
         @password = password
-
         @base_options = {
           headers: {
             'X-App-Token' => @app_token,
@@ -118,23 +117,6 @@ module NBE
           sleep 30
           response = self.class.post(uri, options)
         end
-        # timeout = 5
-        # response = nil
-        # while timeout < 100 && (response.nil? || response.code != 200) # retry
-        #   timeout *= 2
-        #   begin
-        #     response = self.class.post(uri, options)
-        #     if response.code != 200
-        #       puts "Response failed with code #{response.code}, retrying in #{timeout} secs"
-        #       sleep timeout
-        #     end
-        #   rescue Net::ReadTimeout => e
-        #     warn "Exception thrown! Retrying in #{timeout} secs"
-        #     warn e.message
-        #     warn e.backtrace.join("\n")
-        #     sleep timeout
-        #   end
-        # end
         handle_error(path, response, options) unless response.code == 200
         JSON.parse(response.body)
       end
