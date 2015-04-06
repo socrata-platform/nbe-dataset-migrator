@@ -32,6 +32,7 @@ module NBE
       @publish_dataset = options[:publish].nil? ? true : options[:publish]
       @ignore_computed_columns = options[:ignore_computed_columns]
       @region_map = {}
+      @label_map = {}
     end
 
     # runs the migrations
@@ -47,6 +48,7 @@ module NBE
       end
       migrate_data
       publish if @publish_dataset
+      add_geometry_labels unless @ignore_computed_columns
 
       puts "#{@target_client.domain}/d/#{target_id}"
       self
@@ -94,6 +96,9 @@ module NBE
           source_id: old_region,
           publish: true
         ).run.target_id
+        old_metadata = @source_client.get_v1_metadata(old_region)
+        label = old_metadata['geometryLabel']
+        @label_map[new_region] = label unless label.nil?
         @region_map[old_region] = new_region
         puts "Finished migrating. #{old_region} => #{new_region}"
       end
@@ -128,6 +133,16 @@ module NBE
     def publish
       puts 'Publishing dataset.'
       @target_client.publish_dataset(@target_id)
+    end
+
+    def add_geometry_labels
+      return if @label_map.count == 0
+      puts 'Adding geometry labels.'
+      @label_map.each do |region, label|
+        metadata = @target_client.get_v1_metadata(region)
+        metadata['geometryLabel'] = label
+        @target_client.update_v1_metadata(region, metadata)
+      end
     end
 
     ## Helper Methods

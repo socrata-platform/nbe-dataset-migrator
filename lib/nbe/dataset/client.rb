@@ -1,12 +1,13 @@
 require 'addressable/uri'
 require 'httparty'
 require 'json'
+require 'core/auth/client'
 
 module NBE
   module Dataset
     class Client
       include HTTParty
-      default_timeout(60 * 5) # set timeout to 5 min
+      default_timeout(60 * 20) # set timeout to 20 min
       # debug_output($stdout) # uncomment for debug HTTParty output
 
       attr_accessor :domain, :app_token, :user, :password
@@ -18,7 +19,6 @@ module NBE
         @app_token = app_token
         @user = user
         @password = password
-
         @base_options = {
           headers: {
             'X-App-Token' => @app_token,
@@ -43,7 +43,7 @@ module NBE
       end
 
       def ingress_data(id, data)
-        path = "resource/#{id}"
+        path = "api/id/#{id}"
         perform_post(path, body: data.to_json)
       end
 
@@ -54,7 +54,19 @@ module NBE
 
       def get_v1_metadata(id)
         path = "metadata/v1/dataset/#{id}.json"
-        perform_get(path)
+        perform_get(path, headers: { 'Cookie' => auth.cookie })
+      end
+
+      def update_v1_metadata(id, metadata)
+        path = "metadata/v1/dataset/#{id}.json"
+        perform_put(
+          path,
+          headers: {
+            'Cookie' => auth.cookie,
+            'Content-Type' => 'application/json'
+          },
+          body: metadata.to_json
+        )
       end
 
       def create_dataset(id)
@@ -74,6 +86,14 @@ module NBE
 
       private
 
+      def auth
+        @auth ||= Core::Auth::Client.new(
+          domain,
+          email: user,
+          password: password
+        )
+      end
+
       def perform_get(path, options = {})
         uri = URI.join(domain, path)
         response = self.class.get(uri, base_options.merge(options))
@@ -81,18 +101,42 @@ module NBE
         JSON.parse(response.body)
       end
 
+      # TODO: clean this up to implement better exponential backoff
       def perform_post(path, options = {})
         uri = URI.join(domain, path)
         options = base_options.merge(options.merge(query: { nbe: true }))
-        response = self.class.post(uri, options)
+        response = nil
+        begin
+          response = self.class.post(uri, options)
+        rescue Net::ReadTimeout => ex
+          warn ex.message
+          warn ex.backtrace.join("\n")
+        end
+        if response.nil? || response.code != 200 # retry
+          puts "Request failed to #{uri} with response #{response}, retrying in 30 secs"
+          sleep 30
+          response = self.class.post(uri, options)
+        end
         handle_error(path, response, options) unless response.code == 200
         JSON.parse(response.body)
+      end
+
+      def perform_put(path, options = {})
+        uri = URI.join(domain, path)
+        options = base_options.merge(options)
+        response = self.class.put(uri, options)
+        # expect a 204 for the metadata PUT, might not always be 204
+        handle_error(path, response, options) unless response.code == 204
       end
 
       def handle_error(path, response, options = nil)
         warn "Error accessing #{URI.join(domain, path)}"
         warn response
-        warn options.delete('body').delete('basic_auth') if options
+        if options
+          options.delete(:body)
+          options.delete(:basic_auth)
+          warn options
+        end
         fail("Response code: #{response.code}")
       end
     end

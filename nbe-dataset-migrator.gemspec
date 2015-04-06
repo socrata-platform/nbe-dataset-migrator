@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Michael Brown']
   spec.email         = ['michael.brown@socrata.com']
 
-  spec.summary       = 'my summary here'
-  spec.description   = 'my description here'
+  spec.summary       = 'NBE dataset migration tool'
+  spec.description   = 'Enables migration of NBE datasets between environments'
   spec.homepage      = 'https://github.com/socrata/nbe-dataset-migrator'
   spec.license       = 'MIT'
 
@@ -20,6 +20,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'addressable', '~> 2.3'
   spec.add_runtime_dependency 'httparty', '~> 0.13'
   spec.add_runtime_dependency 'json', '~> 1.8'
+  spec.add_runtime_dependency 'core-auth-ruby', '~> 0.2'
 
   spec.add_development_dependency 'bundler', '~> 1.7'
   spec.add_development_dependency 'rake', '~> 10.0'
