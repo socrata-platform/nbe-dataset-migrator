@@ -11,37 +11,32 @@ module NBE
       # TODO: fix this to use the public api:
       # /dataset_metadata/four_by_four.json once changes are pushed to prod
 
-      def initialize(region_map, soda_fountain_ip, dataset_id)
-        uri = URI.join("http://#{soda_fountain_ip}:6010",
-                       "dataset/_#{dataset_id}")
-        response = HTTParty.get(uri)
-        fail("ERROR: #{response}") unless response.code == 200
+      def initialize(metadata, region_map)
+        @metadata = metadata
         @region_map = region_map
-        @sf_metadata = JSON.parse(response.body)
-        @dataset = dataset_id
       end
 
       def computed_columns
-        @computed_columns ||= @sf_metadata['columns'].select do |key, _|
+        @computed_columns ||= @metadata['columns'].select do |key, _|
           key.start_with?(':@')
         end
       end
 
       # columns to be created (transformed to be compatible with the public api)
       def transformed_columns
-        @transformed_columns ||= computed_columns.map do |_, value|
-          transform_column(value)
+        @transformed_columns ||= computed_columns.map do |key, value|
+          transform_column(key, value)
         end
       end
 
-      def transform_column(source_column)
+      def transform_column(field_name, source_column)
         new_column = {}
 
-        to_delete = ['id']
+        new_column['fieldName'] = field_name
+
+        to_delete = %w(fred position hideInTable defaultCardType availableCardTypes)
         to_modify = {
-          'field_name' => 'fieldName',
-          'datatype' => 'dataTypeName',
-          'computation_strategy' => 'computationStrategy'
+          'physicalDatatype' => 'dataTypeName'
         }
 
         source_column.each do |key, value|
@@ -56,6 +51,7 @@ module NBE
           fail('strategy type not georegion_match_on_point, not sure what to do!')
         end
         new_column['computationStrategy']['type'] = 'georegion_match_on_point'
+        new_column['computationStrategy']['recompute'] = true
         source_region_id = new_column['computationStrategy']['parameters']['region'].sub('_', '')
         new_column['computationStrategy']['parameters']['region'] = "_#{@region_map[source_region_id]}"
 
