@@ -55,7 +55,6 @@ module NBE
         source_region_id = new_column['computationStrategy']['parameters']['region'].sub('_', '')
         new_column['computationStrategy']['parameters']['region'] = "_#{@region_map[source_region_id]}"
 
-        puts JSON.pretty_generate(new_column)
         new_column
       end
     end

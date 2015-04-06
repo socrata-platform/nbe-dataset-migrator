@@ -43,7 +43,7 @@ module NBE
       end
 
       def ingress_data(id, data)
-        path = "api/id/#{id}"
+        path = "resource/#{id}"
         perform_post(path, body: data.to_json)
       end
 
