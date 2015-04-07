@@ -18,6 +18,7 @@ It works by providing a DatasetMigration class that exposes the various steps re
 ### Updates
 * 4/1/15: No longer requires DataSync! (seriously, no April fools here)
 * 4/6/15: Uses Phidippides to get computation strategy, not soda fountain. No more VPN!
+* 4/7/15: Use a logging class to enable a user to specify the log level preferred.
 
 ### Installation
 To use the gem in a local project, include the following in the project's Gemfile:
@@ -55,9 +56,10 @@ Usage: dataset_migrator [options]
         --st [TOKEN]                 Source app token
         --td [DOMAIN]                Target domain
         --tt [TOKEN]                 Target app token
-    -r, --rows [ROW_LIMIT]           Total number of rows to copy over, if blank, copies all
+    -r, --rows [ROW_LIMIT]           Total number of rows to copy over, default: copies all
         --[no-]publish               Publish dataset after end of migration, default is to publish
         --ignore-computed-columns    Ignores migration of computed columns
+    -v, --verbose                    Enables verbose logging
     -h, --help                       Displays help
 ```
 
@@ -78,9 +80,22 @@ options = {
   source_id: '[FOUR-BY-FOUR]',
   publish: true, # optional
   row_limit: 100_000, # optional
-  ignore_computed_columns: false # optional
+  ignore_computed_columns: false, # optional
+  log_level: Logger::INFO # optional
 }
 
 migrator = NBE::DatasetMigrator.new(options)
 migrator.run
+```
+* The log level defaults to `INFO`. Use the standard `logger` levels to specify the logging level desired.
+* Log statements look similar to the ones below, the UID in between the date and log level is the ID of the dataset currently being migrated (this will change if regions need to be migrated).
+```
+2015-04-07 13:41:03.71 [52my-2pak] DEBUG: Create column: lng
+2015-04-07 13:41:03.84 [52my-2pak] DEBUG: Create column: location_point
+2015-04-07 13:41:12.11 [52my-2pak]  INFO: Migrating 4 regions to target domain
+2015-04-07 13:41:12.11 [52my-2pak]  INFO: Migrating region dataset 99f5-m626 to target domain.
+2015-04-07 13:41:12.11 [99f5-m626] DEBUG: Verifying that dataset 99f5-m626 is an NBE dataset.
+2015-04-07 13:41:12.53 [99f5-m626]  INFO: Creating dataset: chicagozip
+2015-04-07 13:41:12.70 [99f5-m626]  INFO: Created dataset: https://localhost:9443/d/g34u-2aa5
+2015-04-07 13:41:12.70 [99f5-m626]  INFO: Creating 7 standard columns
 ```
