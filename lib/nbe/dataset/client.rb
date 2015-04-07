@@ -130,12 +130,12 @@ module NBE
       end
 
       def handle_error(path, response, options = nil)
-        log.warn "Error accessing #{URI.join(domain, path)}"
-        log.warn response
+        log.error "Error accessing #{URI.join(domain, path)}"
+        log.error response
         if options
           options.delete(:body)
           options.delete(:basic_auth)
-          log.warn options
+          log.error options
         end
         fail("Response code: #{response.code}")
       end
