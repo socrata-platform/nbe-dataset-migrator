@@ -101,7 +101,6 @@ module NBE
         JSON.parse(response.body)
       end
 
-      # TODO: clean this up to implement better exponential backoff
       def perform_post(path, options = {})
         uri = URI.join(domain, path)
         options = base_options.merge(options.merge(query: { nbe: true }))

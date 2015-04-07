@@ -8,8 +8,6 @@ module NBE
       # columns from one environment to another. Currently, it uses
       # the Soda Fountain api (requires VPN!) to get metadata about the
       # computed columns
-      # TODO: fix this to use the public api:
-      # /dataset_metadata/four_by_four.json once changes are pushed to prod
 
       def initialize(metadata, region_map)
         @metadata = metadata
@@ -22,7 +20,7 @@ module NBE
         end
       end
 
-      # columns to be created (transformed to be compatible with the public api)
+      # columns to be created (transformed to be compatible with the column creation api)
       def transformed_columns
         @transformed_columns ||= computed_columns.map do |key, value|
           transform_column(key, value)
@@ -31,7 +29,6 @@ module NBE
 
       def transform_column(field_name, source_column)
         new_column = {}
-
         new_column['fieldName'] = field_name
 
         to_delete = %w(fred position hideInTable defaultCardType availableCardTypes)

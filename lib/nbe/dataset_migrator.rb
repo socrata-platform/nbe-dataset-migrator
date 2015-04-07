@@ -26,8 +26,6 @@ module NBE
         options[:password]
       )
       @source_id = options[:source_id]
-      @soda_fountain_ip = options[:soda_fountain_ip]
-      @datasync_jar = options[:datasync_jar]
       @row_limit = options[:row_limit]
       @publish_dataset = options[:publish].nil? ? true : options[:publish]
       @ignore_computed_columns = options[:ignore_computed_columns]
@@ -36,7 +34,7 @@ module NBE
     end
 
     # runs the migrations
-    # returns the new dataset 4x4
+    # returns self
     def run
       check_for_nbe_or_fail
 
