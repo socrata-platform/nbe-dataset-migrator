@@ -13,7 +13,7 @@ module NBE
       attr_accessor :domain, :app_token, :user, :password
       attr_reader :base_options
 
-      def initialize(domain, app_token, user, password)
+      def initialize(domain, app_token, user, password, log = nil)
         domain = "https://#{domain}" unless domain.start_with?('http')
         @domain = domain
         @app_token = app_token
@@ -30,6 +30,7 @@ module NBE
           }
         }
         @base_options[:verify] = false if domain.include?('localhost')
+        @log = log || Logger.new(STDOUT)
       end
 
       def get_migration(id)
@@ -108,11 +109,11 @@ module NBE
         begin
           response = self.class.post(uri, options)
         rescue Net::ReadTimeout => ex
-          warn ex.message
-          warn ex.backtrace.join("\n")
+          log.warn ex.message
+          log.warn ex.backtrace.join("\n")
         end
         if response.nil? || response.code != 200 # retry
-          puts "Request failed to #{uri} with response #{response}, retrying in 30 secs"
+          log.warn "Request failed to #{uri} with response #{response}, retrying in 30 secs"
           sleep 30
           response = self.class.post(uri, options)
         end
@@ -129,12 +130,12 @@ module NBE
       end
 
       def handle_error(path, response, options = nil)
-        warn "Error accessing #{URI.join(domain, path)}"
-        warn response
+        log.error "Error accessing #{URI.join(domain, path)}"
+        log.error response
         if options
           options.delete(:body)
           options.delete(:basic_auth)
-          warn options
+          log.error options
         end
         fail("Response code: #{response.code}")
       end

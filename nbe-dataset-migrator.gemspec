@@ -21,6 +21,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'httparty', '~> 0.13'
   spec.add_runtime_dependency 'json', '~> 1.8'
   spec.add_runtime_dependency 'core-auth-ruby', '~> 0.2'
+  spec.add_runtime_dependency 'colorize', '~> 0.7'
 
   spec.add_development_dependency 'bundler', '~> 1.7'
   spec.add_development_dependency 'rake', '~> 10.0'
