@@ -4,12 +4,9 @@ require 'logger'
 require 'colorize'
 
 module NBE
+  # The migration class takes care of copying a dataset
+  # It can copy across environments, copying over referenced regions if needed
   class DatasetMigrator
-    # The migration class takes care of copying a dataset
-    # It can copy across environments, copying over referenced regions if needed
-    # TODO: once computation strategy (including source column field name)
-    # is available from a public api, move to a more sane method of creating columns
-
     DEFAULT_CHUNK_SIZE = 50_000
 
     attr_reader :source_id, :target_id, :log
@@ -154,14 +151,19 @@ module NBE
 
     def setup_logger(log_level)
       @log = Logger.new(STDOUT)
-      @log.formatter = proc do |severity, datetime, progname, msg|
+      @log.formatter = proc do |severity, datetime, _, msg|
         case severity
         when 'DEBUG' then color = :blue
         when 'INFO' then color = :white
         when 'WARN' then color = :yellow
         else color = :light_red
         end
-        "#{datetime.strftime('%Y-%m-%d %H:%M:%S.%2N')} [#{@source_id}] #{severity.rjust(5)}: #{msg}\n".send(color)
+        [
+          datetime.strftime('%Y-%m-%d %H:%M:%S.%2N'),
+          "[#{@source_id}]",
+          "#{severity.rjust(5)}:",
+          "#{msg}\n"
+        ].join(' ').send(color)
       end
       @log.level = log_level || Logger::INFO
     end

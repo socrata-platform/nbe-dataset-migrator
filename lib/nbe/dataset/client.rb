@@ -5,13 +5,14 @@ require 'core/auth/client'
 
 module NBE
   module Dataset
+    # Class that wraps all calls to the Socrata APIs used for dataset migration
     class Client
       include HTTParty
       default_timeout(60 * 20) # set timeout to 20 min
       # debug_output($stdout) # uncomment for debug HTTParty output
 
       attr_accessor :domain, :app_token, :user, :password
-      attr_reader :base_options
+      attr_reader :base_options, :log
 
       def initialize(domain, app_token, user, password, log = nil)
         domain = "https://#{domain}" unless domain.start_with?('http')

@@ -3,12 +3,11 @@ require 'securerandom'
 
 module NBE
   module Dataset
+    # The ComputedMigration class helps with migrating computed
+    # columns from one environment to another. Currently, it uses
+    # the Soda Fountain api (requires VPN!) to get metadata about the
+    # computed columns
     class ComputedMigration
-      # The ComputedMigration class helps with migrating computed
-      # columns from one environment to another. Currently, it uses
-      # the Soda Fountain api (requires VPN!) to get metadata about the
-      # computed columns
-
       def initialize(metadata, region_map)
         @metadata = metadata
         @region_map = region_map
@@ -32,25 +31,24 @@ module NBE
         new_column['fieldName'] = field_name
 
         to_delete = %w(fred position hideInTable defaultCardType availableCardTypes)
-        to_modify = {
-          'physicalDatatype' => 'dataTypeName'
-        }
+        to_modify = { 'physicalDatatype' => 'dataTypeName' }
 
         source_column.each do |key, value|
           next if to_delete.include?(key)
-
           new_key = to_modify[key] || key
           new_column[new_key] = value
         end
 
-        strategy_type = new_column['computationStrategy'].delete('strategy_type')
-        unless strategy_type == 'georegion_match_on_point'
-          fail('strategy type not georegion_match_on_point, not sure what to do!')
+        new_column['computationStrategy'].tap do |strategy|
+          strategy_type = strategy.delete('strategy_type')
+          unless strategy_type == 'georegion_match_on_point'
+            fail("Unknown strategy type: #{strategy_type}")
+          end
+          strategy['type'] = 'georegion_match_on_point'
+          strategy['recompute'] = true
+          source_region = strategy['parameters']['region'].sub('_', '')
+          strategy['parameters']['region'] = "_#{@region_map[source_region]}"
         end
-        new_column['computationStrategy']['type'] = 'georegion_match_on_point'
-        new_column['computationStrategy']['recompute'] = true
-        source_region_id = new_column['computationStrategy']['parameters']['region'].sub('_', '')
-        new_column['computationStrategy']['parameters']['region'] = "_#{@region_map[source_region_id]}"
 
         new_column
       end
