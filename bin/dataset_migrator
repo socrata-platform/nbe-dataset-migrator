@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require 'nbe/version'
 require 'nbe/dataset_migrator'
 require 'optparse'
 
@@ -29,7 +30,7 @@ OptionParser.new do |opts|
     options[:target_token] = token
   end
 
-  opts.on('-r', '--rows [ROW_LIMIT]', 'Number of rows to copy over, default: copies all') do |rows|
+  opts.on('-r', '--rows [ROW_LIMIT]', 'Max number of rows to copy over, default: copies all') do |rows|
     options[:row_limit] = rows.to_i
   end
 
@@ -37,12 +38,17 @@ OptionParser.new do |opts|
     options[:publish] = publish
   end
 
-  opts.on('--ignore-computed-columns', 'Ignores migration of computed columns') do |_|
-    options[:ignored_computed_columns] = true
+  opts.on('--ignore-computed-columns', 'Ignores migration of computed columns') do
+    options[:ignore_computed_columns] = true
   end
 
-  opts.on('-v', '--verbose', 'Enables verbose logging') do |_|
+  opts.on('-v', '--verbose', 'Enables verbose logging') do
     options[:log_level] = Logger::DEBUG
+  end
+
+  opts.on('--version', 'Shows version information') do
+    puts("nbe-dataset-migrator (version #{NBE::VERSION})")
+    exit
   end
 
   opts.on('-h', '--help', 'Displays help') do

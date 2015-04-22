@@ -1,10 +1,10 @@
 # coding: utf-8
-lib = File.expand_path('../lib', __FILE__)
-$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+$LOAD_PATH.push File.expand_path('../lib', __FILE__)
+require 'nbe/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'nbe-dataset-migrator'
-  spec.version       = '0.2.1'
+  spec.version       = NBE::VERSION
   spec.authors       = ['Michael Brown']
   spec.email         = ['michael.brown@socrata.com']
 
