@@ -56,10 +56,11 @@ Usage: dataset_migrator [options]
         --st [TOKEN]                 Source app token
         --td [DOMAIN]                Target domain
         --tt [TOKEN]                 Target app token
-    -r, --rows [ROW_LIMIT]           Total number of rows to copy over, default: copies all
-        --[no-]publish               Publish dataset after end of migration, default is to publish
+    -r, --rows [ROW_LIMIT]           Number of rows to copy over, default: copies all
+        --[no-]publish               Publish dataset after migration, default is to publish
         --ignore-computed-columns    Ignores migration of computed columns
     -v, --verbose                    Enables verbose logging
+        --version                    Shows version information
     -h, --help                       Displays help
 ```
 
