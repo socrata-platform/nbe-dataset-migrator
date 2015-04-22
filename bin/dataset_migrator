@@ -30,7 +30,7 @@ OptionParser.new do |opts|
     options[:target_token] = token
   end
 
-  opts.on('-r', '--rows [ROW_LIMIT]', 'Number of rows to copy over, default: copies all') do |rows|
+  opts.on('-r', '--rows [ROW_LIMIT]', 'Max number of rows to copy over, default: copies all') do |rows|
     options[:row_limit] = rows.to_i
   end
 
