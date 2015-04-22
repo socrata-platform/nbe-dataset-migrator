@@ -39,7 +39,7 @@ OptionParser.new do |opts|
   end
 
   opts.on('--ignore-computed-columns', 'Ignores migration of computed columns') do
-    options[:ignored_computed_columns] = true
+    options[:ignore_computed_columns] = true
   end
 
   opts.on('-v', '--verbose', 'Enables verbose logging') do
