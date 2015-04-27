@@ -38,7 +38,7 @@ OptionParser.new do |opts|
     options[:publish] = publish
   end
 
-  opts.on('--ignore-computed-columns', 'Ignores migration of computed columns') do
+  opts.on('--ignore-computed-columns', 'Ignores migration of computed columns and their associated regions') do
     options[:ignore_computed_columns] = true
   end
 

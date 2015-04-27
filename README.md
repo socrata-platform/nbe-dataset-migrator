@@ -58,7 +58,7 @@ Usage: dataset_migrator [options]
         --tt [TOKEN]                 Target app token
     -r, --rows [ROW_LIMIT]           Max number of rows to copy over, default: copies all
         --[no-]publish               Publish dataset after migration, default is to publish
-        --ignore-computed-columns    Ignores migration of computed columns
+        --ignore-computed-columns    Ignores migration of computed columns and their associated regions
     -v, --verbose                    Enables verbose logging
         --version                    Shows version information
     -h, --help                       Displays help
