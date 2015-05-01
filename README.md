@@ -79,9 +79,9 @@ options = {
   target_domain: 'https://opendata-demo.test-socrata.com',
   target_token: '[APP_TOKEN]',
   source_id: '[FOUR-BY-FOUR]',
-  publish: true, # optional
-  row_limit: 100_000, # optional
-  ignore_computed_columns: false, # optional
+  publish: true, # optional, if not provided the default is true (publish)
+  row_limit: 100_000, # optional, if not provided the default is to migrate all data
+  ignore_computed_columns: false, # optional, if not provided the default is false (meaning it will migrate the computed columns)
   log_level: Logger::INFO # optional
 }
 
